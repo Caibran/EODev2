@@ -1,0 +1,49 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+.vs/EoDEV++/v15/.suo
+*.db
+*.ipch
+.vs/EoDEV++/v16/.suo
+*.opendb
+*.ini
+*.log
+*.txt
+*.pdb
+*.tlog
+*.egf
+*.emf
+*.ecf
+*.eif
+*.esf
+*.enf
+*.idb
