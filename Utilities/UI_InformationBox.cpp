@@ -243,7 +243,7 @@ void UI_InformationBox::Update()
 					if (m_game->MouseY > Pos->y + rct.top && m_game->MouseY < Pos->y + rct.bottom)
 					{
 						HighlightedMessage = this->ContainerData[this->PhaseID][m_startindex + i];
-						//if (this->m_game->MousePressed)
+						if (this->m_game->MousePressed)
 						{
 							this->PhaseType = MessageType::_Text;
 							switch (HighlightedMessage.Message_Type)
@@ -293,10 +293,13 @@ void UI_InformationBox::Update()
 							}
 							if (this->ContainerData[this->PhaseID][m_startindex + i]._Hyperlinks.size() > 0)
 							{							
-								this->ChangePhase(this->ContainerData[this->PhaseID][m_startindex + i]._Hyperlinks[0]._Goto);
-								delete Pos;
-								delete Center;
-								break;
+								if (this->m_game->MousePressed)
+								{
+									this->ChangePhase(this->ContainerData[this->PhaseID][m_startindex + i]._Hyperlinks[0]._Goto);
+									delete Pos;
+									delete Center;
+									break;
+								}
 							}
 						}
 					}

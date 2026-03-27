@@ -39,23 +39,26 @@ CLIENT_F_FUNC(Character)
 								game->SubStage = 0;
 								break;
 							}
-						case (CHARACTER_DELETED):
-							{
-								break;
-							}
-						default:
-							{
-									Menu::SrvrCreateID = ID;
-									std::string str = reader.GetEndString();
-									if(str != "OK")
-									{
-										World::ThrowMessage("Request denied","You can only have 3 characters. Please \ndelete a character and try again");
-										return false;
-									}
-									game->SubStage = 1;
-									return true;
-							}
+							case (CHARACTER_DELETED):
+						{
+							World::ThrowMessage("Character deleted", "Your character has been deleted.");
+							game->menu->LastDeleteRequest = -1;
+							game->SubStage = 0;
+							break;
 						}
+					default:
+						{
+								Menu::SrvrCreateID = ID;
+								std::string str = reader.GetEndString();
+								if(str != "OK")
+								{
+									World::ThrowMessage("Request denied","You can only have 3 characters. Please \ndelete a character and try again");
+									return false;
+								}
+								game->SubStage = 1;
+								return true;
+						}
+					}
 
 						unsigned char CharacterSize = reader.GetChar();
 						reader.Getbyte();

@@ -8,7 +8,20 @@ private:
 public:
 	Button* UI_Element_GameSettingsButton;
 
-	//Map_UI_Inventory();
+	// Settings toggle states
+	bool SoundEnabled = true;
+	bool MusicEnabled = true;
+	bool ShowBalloons = true;
+	bool ShowShadows = true;
+	bool InteractionEnabled = true;
+
+	// Toggle buttons (using resource GFX 2,27 like EndlessClient)
+	Button* BT_Toggle_Sound;
+	Button* BT_Toggle_Music;
+	Button* BT_Toggle_Balloons;
+	Button* BT_Toggle_Shadows;
+	Button* BT_Toggle_Interaction;
+
 	Map_UI_GameSettings(Map_UI* m_MapUI, Game* m_Game);
 	void Update();
 	void Render(float depth);

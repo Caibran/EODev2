@@ -1,10 +1,11 @@
 #pragma once
+#include <chrono>
 
 class Map_NPC
 {
-	int FindWalkDirection(int dest_x, int dest_y);
 	Game* m_Game;
 public:
+	int FindWalkDirection(int dest_x, int dest_y);
 	Map_NPC();
 	int Index;
 	int ID;
@@ -15,7 +16,7 @@ public:
 	int MaxHP;
 	int destination_x = -1;
 	int destination_y = -1;
-	int moveFPS = 0;
+	std::chrono::steady_clock::time_point walkStepTime;
 	int yoffset = 0;
 	int xoffset = 0;
 	int WalkCounter = 0;

@@ -1,9 +1,10 @@
 #pragma once
+#include <chrono>
 #include "..\..\Game_Stage\Map_Element\CharacterModel.h"
 class Map_Player : public CharacterModel
 {
-	int FindWalkDirection(int dest_x, int dest_y);
 public:
+	int FindWalkDirection(int dest_x, int dest_y);
 	std::string PlayerName = "";
 	int x = 0;
 	int y = 0;
@@ -42,8 +43,7 @@ public:
 	bool nowhere;
 	unsigned int CharacterID;
 	
-	clock_t startwalkanimationtimer;
-	clock_t endwalkanimationtimer;
+	std::chrono::steady_clock::time_point walkStepTime;
 	//AdminLevel admin;
 	std::string guildname;
 	std::string guildtag;
@@ -56,7 +56,6 @@ public:
 	unsigned char clas;
 	short mapid;
 	int fpscounter = 0;
-	int moveFPS = 0;
 	int WalkCounter = 0;
 	//Direction direction;
 	unsigned char level;

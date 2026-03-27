@@ -277,7 +277,13 @@ void Map::WalkPlayer(int ID, int direction, int DestX, int DestY)
 
 			this->m_Players[m_PlayerID]->x = FromX;
 			this->m_Players[m_PlayerID]->y = FromY;
-			this->m_Players[m_PlayerID]->MovePlayer(this->m_game->FPS, DestX, DestY);
+			this->m_Players[m_PlayerID]->destination_x = DestX;
+			this->m_Players[m_PlayerID]->destination_y = DestY;
+			this->m_Players[m_PlayerID]->direction = this->m_Players[m_PlayerID]->FindWalkDirection(DestX, DestY);
+			this->m_Players[m_PlayerID]->xoffset = 0;
+			this->m_Players[m_PlayerID]->yoffset = 0;
+			this->m_Players[m_PlayerID]->WalkCounter = 0;
+			this->m_Players[m_PlayerID]->walkStepTime = std::chrono::steady_clock::now();
 			this->m_Players[m_PlayerID]->SetStance(CharacterModel::PlayerStance::Walking);
 			this->ThreadLock.unlock();
 		}
@@ -322,8 +328,14 @@ void Map::WalkNPC(int ID, int direction, int DestX, int DestY)
 
 			this->m_NPCs[m_NPCID]->x = FromX;
 			this->m_NPCs[m_NPCID]->y = FromY;
+			this->m_NPCs[m_NPCID]->destination_x = DestX;
+			this->m_NPCs[m_NPCID]->destination_y = DestY;
+			this->m_NPCs[m_NPCID]->direction = this->m_NPCs[m_NPCID]->FindWalkDirection(DestX, DestY);
+			this->m_NPCs[m_NPCID]->xoffset = 0;
+			this->m_NPCs[m_NPCID]->yoffset = 0;
+			this->m_NPCs[m_NPCID]->WalkCounter = 0;
+			this->m_NPCs[m_NPCID]->walkStepTime = std::chrono::steady_clock::now();
 			this->m_NPCs[m_NPCID]->SetStance(Map_NPC::NPC_Stance::Walking);
-			this->m_NPCs[m_NPCID]->MoveNPC(this->m_game->FPS, DestX, DestY);
 			this->ThreadLock.unlock();
 		}
 	}
@@ -347,7 +359,13 @@ void Map::WalkGameCharacter(int ID, int direction, int _X, int _Y)
 	
 	if (tmeta.spec == EMF_Tile_Spec::None || (tmeta.spec >= EMF_Tile_Spec::NPCBoundary && tmeta.spec <= EMF_Tile_Spec::FakeWall) || (tmeta.spec >= EMF_Tile_Spec::Jump))
 	{
-		this->m_Players[ID]->MovePlayer(this->m_game->FPS, _X, _Y);
+		this->m_Players[ID]->destination_x = _X;
+		this->m_Players[ID]->destination_y = _Y;
+		this->m_Players[ID]->direction = this->m_Players[ID]->FindWalkDirection(_X, _Y);
+		this->m_Players[ID]->xoffset = 0;
+		this->m_Players[ID]->yoffset = 0;
+		this->m_Players[ID]->WalkCounter = 0;
+		this->m_Players[ID]->walkStepTime = std::chrono::steady_clock::now();
 		this->m_Players[ID]->SetStance(CharacterModel::PlayerStance::Walking);
 		SWalk::SendWalk(this->m_game->world->connection->ClientStream, this->m_Players[ID]->direction, _X, _Y, (LPVOID)this->m_game);
 	}
@@ -840,8 +858,8 @@ constexpr float epi = 0.00001f; // gap between each interleaved layer
 			{
 				int xoffsp = layer_info[layer].xoff - xoff;
 				int yoffsp = layer_info[layer].yoff - yoff;
-				int tilexp = xoffsp + (player->second->x * 32) - (player->second->y * 32);
-				int tileyp = yoffsp + (player->second->x * 16) + (player->second->y * 16);
+				int tilexp = xoffsp + (player->second->x * 32) - (player->second->y * 32) + player->second->xoffset;
+				int tileyp = yoffsp + (player->second->x * 16) + (player->second->y * 16) + player->second->yoffset;
 				player->second->Map_PlayerRender(this->Sprite, tilexp + 24, tileyp - 40, depth, sf::Color::Color(255, 255, 255, 255));
 				if (player->first == World::WorldCharacterID)
 				{
@@ -859,8 +877,8 @@ constexpr float epi = 0.00001f; // gap between each interleaved layer
 			next_depth();
 			int xoffsp = layer_info[layer].xoff - xoff;
 			int yoffsp = layer_info[layer].yoff - yoff;
-			int tilexp = xoffsp + (NPC->second->x * 32) - (NPC->second->y * 32);
-			int tileyp = yoffsp + (NPC->second->x * 16) + (NPC->second->y * 16);
+			int tilexp = xoffsp + (NPC->second->x * 32) - (NPC->second->y * 32) + NPC->second->xoffset;
+			int tileyp = yoffsp + (NPC->second->x * 16) + (NPC->second->y * 16) + NPC->second->yoffset;
 			NPC->second->Render(this->Sprite, tilexp, tileyp, depth);
 			//NPC->second->Render(this->Sprite, tilexp, tileyp, depth);
 		}

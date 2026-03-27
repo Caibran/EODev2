@@ -232,53 +232,185 @@ void Map_UI_Cursor::Render(sf::Sprite* m_sprite, float depth)
 				}
 
 			}
-			int ax = (px - this->p_Map->xpos);
-			int ay = (py - this->p_Map->ypos);
-			int cx = (ax * 32) - (ay * 32) + 280;
-			int cy = (ay * 16) + (ax * 16) + 170;
 
-			// Add the hovered entity's walk offset so name follows the sprite during movement
-			if (cursordat._CType == CursorType::Player)
+			// --- ITEM TOOLTIP: follows mouse cursor with formatted stats and wood border ---
+			bool isItemTooltip = (cursordat._CType == CursorType::None && Name != "");
+			if (isItemTooltip)
 			{
-				Map_Player* hoveredPlayer = p_Map->m_Players[cursordat.index];
-				if (hoveredPlayer)
+				// Find the item on this tile for stat lookup
+				EIF_Data itemData;
+				int itemID = 0;
+				int itemAmount = 0;
+				for (std::map<int, Map::Map_Item>::iterator m_item = this->p_Map->m_Items.begin(); m_item != this->p_Map->m_Items.end(); ++m_item)
 				{
-					cx += hoveredPlayer->xoffset;
-					cy += hoveredPlayer->yoffset;
+					if (m_item->second.x == this->x && m_item->second.y == this->y)
+					{
+						itemID = m_item->second.ItemID;
+						itemAmount = m_item->second.amount;
+						itemData = World::EIF_File->Get(itemID);
+						break;
+					}
 				}
-			}
-			else if (cursordat._CType == CursorType::NPC)
-			{
-				Map_NPC* hoveredNPC = p_Map->m_NPCs[cursordat.index];
-				if (hoveredNPC)
-				{
-					cx += hoveredNPC->xoffset;
-					cy += hoveredNPC->yoffset;
-				}
-			}
 
-			if (this->m_game->map->m_Players[World::WorldCharacterID]->direction == 0 || this->m_game->map->m_Players[World::WorldCharacterID]->direction == 3)
-			{
-				rct.left = cx - 16 - (this->m_game->map->m_Players[World::WorldCharacterID]->xoffset);
-				rct.right = rct.left + 100;
-				rct.top = cy - Height - (this->m_game->map->m_Players[World::WorldCharacterID]->yoffset);
-				rct.bottom = rct.top + 20;
+				// Build tooltip lines
+				std::vector<std::string> lines;
+				lines.push_back(Name); // Item name with amount
+
+				// Type label
+				static const char* typeNames[] = {
+					"", "", "Currency", "Consumable", "Teleport Scroll", "Spell Scroll",
+					"EXP Reward", "Stat Reward", "Skill Reward", "Key",
+					"Weapon", "Shield", "Armor", "Hat", "Boots", "Gloves",
+					"Accessory", "Belt", "Necklace", "Ring", "Armlet", "Bracer",
+					"Alcohol", "Effect Potion", "Hair Dye", "Cure Curse"
+				};
+				int typeIdx = (int)itemData.type;
+				if (typeIdx >= 2 && typeIdx <= 25)
+				{
+					lines.push_back(std::string(typeNames[typeIdx]));
+				}
+
+				// Stats (only show non-zero values)
+				if (itemData.hp > 0) lines.push_back("HP: +" + std::to_string(itemData.hp));
+				if (itemData.tp > 0) lines.push_back("TP: +" + std::to_string(itemData.tp));
+				if (itemData.mindam > 0 || itemData.maxdam > 0)
+					lines.push_back("Damage: " + std::to_string(itemData.mindam) + "-" + std::to_string(itemData.maxdam));
+				if (itemData.accuracy > 0) lines.push_back("Accuracy: +" + std::to_string(itemData.accuracy));
+				if (itemData.evade > 0) lines.push_back("Evade: +" + std::to_string(itemData.evade));
+				if (itemData.armor > 0) lines.push_back("Armor: +" + std::to_string(itemData.armor));
+				if (itemData.str > 0) lines.push_back("STR: +" + std::to_string(itemData.str));
+				if (itemData.intl > 0) lines.push_back("INT: +" + std::to_string(itemData.intl));
+				if (itemData.wis > 0) lines.push_back("WIS: +" + std::to_string(itemData.wis));
+				if (itemData.agi > 0) lines.push_back("AGI: +" + std::to_string(itemData.agi));
+				if (itemData.con > 0) lines.push_back("CON: +" + std::to_string(itemData.con));
+				if (itemData.cha > 0) lines.push_back("CHA: +" + std::to_string(itemData.cha));
+				if (itemData.weight > 0) lines.push_back("Weight: " + std::to_string(itemData.weight));
+				if (itemData.levelreq > 0) lines.push_back("Level Req: " + std::to_string(itemData.levelreq));
+
+				// Calculate tooltip dimensions
+				int lineHeight = 14;
+				int padding = 6;
+				int borderThickness = 2;
+				int tooltipWidth = 140;
+
+				// Measure max text width
+				for (int i = 0; i < lines.size(); i++)
+				{
+					sf::Vector2f textSize = this->m_game->GetFontSize(lines[i], 9);
+					if (textSize.x + padding * 2 + borderThickness * 2 > tooltipWidth)
+					{
+						tooltipWidth = (int)textSize.x + padding * 2 + borderThickness * 2 + 4;
+					}
+				}
+
+				int tooltipHeight = (int)lines.size() * lineHeight + padding * 2;
+
+				// Position: follow mouse cursor with offset
+				int ttx = this->m_game->MouseX + 16;
+				int tty = this->m_game->MouseY + 4;
+
+				// Keep on screen
+				if (ttx + tooltipWidth > 640) ttx = this->m_game->MouseX - tooltipWidth - 4;
+				if (tty + tooltipHeight > 308) tty = 308 - tooltipHeight;
+				if (ttx < 0) ttx = 0;
+				if (tty < 12) tty = 12;
+
+				// Draw wood border (outer border - darker wood color)
+				sf::Color woodBorderDark(101, 67, 33, 255);   // Dark brown
+				sf::Color woodBorderLight(160, 120, 60, 255); // Light brown
+				sf::Color tooltipBg(30, 20, 10, 220);         // Dark almost-black background
+
+				// Outer border rectangle (using the chat bubble background stretched)
+				// Top border
+				this->m_game->Draw(this->m_game->Map_UserInterface->map_ChatBubbleHandler->ChatBoxBG,
+					ttx, tty, woodBorderDark, 0, 0, tooltipWidth, borderThickness, sf::Vector2f(1, 1), 0.001f);
+				// Bottom border
+				this->m_game->Draw(this->m_game->Map_UserInterface->map_ChatBubbleHandler->ChatBoxBG,
+					ttx, tty + tooltipHeight - borderThickness, woodBorderDark, 0, 0, tooltipWidth, borderThickness, sf::Vector2f(1, 1), 0.001f);
+				// Left border
+				this->m_game->Draw(this->m_game->Map_UserInterface->map_ChatBubbleHandler->ChatBoxBG,
+					ttx, tty, woodBorderDark, 0, 0, borderThickness, tooltipHeight, sf::Vector2f(1, 1), 0.001f);
+				// Right border
+				this->m_game->Draw(this->m_game->Map_UserInterface->map_ChatBubbleHandler->ChatBoxBG,
+					ttx + tooltipWidth - borderThickness, tty, woodBorderDark, 0, 0, borderThickness, tooltipHeight, sf::Vector2f(1, 1), 0.001f);
+
+				// Inner border (1px inset)
+				this->m_game->Draw(this->m_game->Map_UserInterface->map_ChatBubbleHandler->ChatBoxBG,
+					ttx + borderThickness, tty + borderThickness, woodBorderLight,
+					0, 0, tooltipWidth - borderThickness * 2, 1, sf::Vector2f(1, 1), 0.001f);
+				this->m_game->Draw(this->m_game->Map_UserInterface->map_ChatBubbleHandler->ChatBoxBG,
+					ttx + borderThickness, tty + tooltipHeight - borderThickness - 1, woodBorderLight,
+					0, 0, tooltipWidth - borderThickness * 2, 1, sf::Vector2f(1, 1), 0.001f);
+				this->m_game->Draw(this->m_game->Map_UserInterface->map_ChatBubbleHandler->ChatBoxBG,
+					ttx + borderThickness, tty + borderThickness, woodBorderLight,
+					0, 0, 1, tooltipHeight - borderThickness * 2, sf::Vector2f(1, 1), 0.001f);
+				this->m_game->Draw(this->m_game->Map_UserInterface->map_ChatBubbleHandler->ChatBoxBG,
+					ttx + tooltipWidth - borderThickness - 1, tty + borderThickness, woodBorderLight,
+					0, 0, 1, tooltipHeight - borderThickness * 2, sf::Vector2f(1, 1), 0.001f);
+
+				// Background fill
+				this->m_game->Draw(this->m_game->Map_UserInterface->map_ChatBubbleHandler->ChatBoxBG,
+					ttx + borderThickness + 1, tty + borderThickness + 1, tooltipBg,
+					0, 0, tooltipWidth - borderThickness * 2 - 2, tooltipHeight - borderThickness * 2 - 2, sf::Vector2f(1, 1), 0.001f);
+
+				// Draw text lines
+				int textX = ttx + padding + borderThickness;
+				int textY = tty + padding + borderThickness;
+				for (int i = 0; i < lines.size(); i++)
+				{
+					sf::Color textCol = (i == 0) ? sf::Color(255, 255, 200, 255) : sf::Color(200, 200, 180, 255);
+					if (i == 1 && typeIdx >= 2 && typeIdx <= 25)
+					{
+						textCol = sf::Color(170, 170, 140, 255); // Dimmer for type label
+					}
+					this->m_game->DrawTextW(lines[i], textX, textY + i * lineHeight, textCol, 9, false, 0.0005f, 0);
+				}
 			}
 			else
 			{
-				rct.left = cx - 16 + (this->m_game->map->m_Players[World::WorldCharacterID]->xoffset);
-				rct.right = rct.left + 100;
-				rct.top = cy - Height - (this->m_game->map->m_Players[World::WorldCharacterID]->yoffset);
-				rct.bottom = rct.top + 20;
+				// --- PLAYER / NPC NAME: stays tile-attached ---
+				int ax = (px - this->p_Map->xpos);
+				int ay = (py - this->p_Map->ypos);
+				int cx = (ax * 32) - (ay * 32) + 280;
+				int cy = (ay * 16) + (ax * 16) + 170;
+
+				// Add the hovered entity's walk offset so name follows the sprite during movement
+				if (cursordat._CType == CursorType::Player)
+				{
+					Map_Player* hoveredPlayer = p_Map->m_Players[cursordat.index];
+					if (hoveredPlayer)
+					{
+						cx += hoveredPlayer->xoffset;
+						cy += hoveredPlayer->yoffset;
+					}
+				}
+				else if (cursordat._CType == CursorType::NPC)
+				{
+					Map_NPC* hoveredNPC = p_Map->m_NPCs[cursordat.index];
+					if (hoveredNPC)
+					{
+						cx += hoveredNPC->xoffset;
+						cy += hoveredNPC->yoffset;
+					}
+				}
+
+				if (this->m_game->map->m_Players[World::WorldCharacterID]->direction == 0 || this->m_game->map->m_Players[World::WorldCharacterID]->direction == 3)
+				{
+					rct.left = cx - 16 - (this->m_game->map->m_Players[World::WorldCharacterID]->xoffset);
+					rct.right = rct.left + 100;
+					rct.top = cy - Height - (this->m_game->map->m_Players[World::WorldCharacterID]->yoffset);
+					rct.bottom = rct.top + 20;
+				}
+				else
+				{
+					rct.left = cx - 16 + (this->m_game->map->m_Players[World::WorldCharacterID]->xoffset);
+					rct.right = rct.left + 100;
+					rct.top = cy - Height - (this->m_game->map->m_Players[World::WorldCharacterID]->yoffset);
+					rct.bottom = rct.top + 20;
+				}
+
+				this->m_game->DrawTextW(Name, rct.left + 50, rct.top - 5, sf::Color(255, 255, 255, 255), 11, true, 0.04, 1);
 			}
-
-			std::basic_string<wchar_t> Game_istring;
-			Game_istring.clear();
-			std::wstring newstr = std::to_wstring(depth).c_str();
-			Game_istring += newstr.substr(0, 4);
-
-			this->m_game->DrawTextW(Name, rct.left + 50, rct.top - 5, sf::Color(255, 255, 255, 255), 11, true, 0.04, 1);
-		
 		}
 	}
 

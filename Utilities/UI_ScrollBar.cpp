@@ -89,14 +89,16 @@ void UI_Scrollbar::Update(int MouseX, int MouseY, int MouseWheelValue, bool Mous
 		}
 		else
 		{
-			this->Barpos = MouseX - this->x - 24;
+			int buttonOffset = this->Buttonsenabled ? 24 : 0;
+			this->Barpos = MouseX - this->x - buttonOffset;
 			if (this->Barpos < 0)
 			{
 				this->Barpos = 0;
 			}
-			if (this->Barpos > this->BarHeight - 32)
+			int maxBarPos = this->Buttonsenabled ? this->BarHeight - 32 : this->BarHeight - 16;
+			if (this->Barpos > maxBarPos)
 			{
-				this->Barpos = this->BarHeight - 32;
+				this->Barpos = maxBarPos;
 			}
 		}
 	}
@@ -126,7 +128,9 @@ void UI_Scrollbar::Update(int MouseX, int MouseY, int MouseWheelValue, bool Mous
 			}
 		}
 	}
-	this->BarPercent = (float)(this->Barpos) / (float)(this->BarHeight - 32);
+	int maxBarTravel = this->Buttonsenabled ? this->BarHeight - 32 : this->BarHeight - 16;
+	if (maxBarTravel < 1) maxBarTravel = 1;
+	this->BarPercent = (float)(this->Barpos) / (float)(maxBarTravel);
 	if (this->TextOrElement)
 	{
 		this->MaxIndex = this->SubText.size();
@@ -243,7 +247,8 @@ void UI_Scrollbar::Draw(float depth)
 	sf::Vector3f* Center = new sf::Vector3f(0, 0, 0);
 	if (!this->IsVertical)
 	{
-		Pos->x = x + 16 + this->Barpos;
+		int buttonOffset = this->Buttonsenabled ? 16 : 0;
+		Pos->x = x + buttonOffset + this->Barpos;
 		Pos->y = y;
 	}
 

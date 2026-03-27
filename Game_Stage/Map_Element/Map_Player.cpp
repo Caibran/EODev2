@@ -52,13 +52,13 @@ int  Map_Player::FindWalkDirection(int dest_x, int dest_y)
 
 void Map_Player::MovePlayer(int FPS, int dest_x, int dest_y)
 {
-	endwalkanimationtimer = clock();
-	//std::string str = "Move From " + this->name + ". Player ID " + std::to_string(this->CharacterID);
-	//World::DebugPrint(str.c_str());
+	const auto WALK_STEP_MS = std::chrono::milliseconds(90); // matches EndlessClient: 9 ticks * 10ms
+
 	int move_direction = this->FindWalkDirection(dest_x, dest_y);
 	this->direction = move_direction;
-	moveFPS++;
-	if (endwalkanimationtimer - startwalkanimationtimer > (1000/8.5))
+
+	auto now = std::chrono::steady_clock::now();
+	if (now - walkStepTime >= WALK_STEP_MS)
 	{
 		switch (move_direction)
 		{
@@ -88,7 +88,7 @@ void Map_Player::MovePlayer(int FPS, int dest_x, int dest_y)
 			}
 		}
 		this->frame_ID++;
-		startwalkanimationtimer = clock();
+		walkStepTime = now;
 		WalkCounter++;
 	}
 	if (WalkCounter >= 4)

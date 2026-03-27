@@ -12,6 +12,7 @@ Map_UI_WhoIsOnline::Map_UI_WhoIsOnline(Map_UI* m_UIElement, Game* m_Game)
 
 	this->UI_WhoisOnlineScrollbar = new UI_Scrollbar(568, 351, 600, 117, -445, 0, 82, TextTools::ChatGroups[TextTools::ChatIndex::WhoIsOnline], this->m_game->ResourceManager->GetResource(2, 29, false), this->m_game, this->m_game->MessageFont, this->m_game->ResourceManager->GetResource(2, 32, true));
 	WhosisOnlineStartTimer = clock();
+	needsImmediatePopulate = true;
 }
 
 void Map_UI_WhoIsOnline::Update()
@@ -21,6 +22,7 @@ void Map_UI_WhoIsOnline::Update()
 	{
 		this->m_MapUI->SetStage(Map_UI::UI_ElementStage::UI_Element_WhoIsOnline);
 		SPlayers::SendPlayerListRequest(this->m_game->world->connection->ClientStream, this->m_game);
+		needsImmediatePopulate = true;
 	}
 	switch (this->m_MapUI->UI_Stage)
 	{
@@ -28,9 +30,10 @@ void Map_UI_WhoIsOnline::Update()
 	{
 		WhoisOnlineEndTimer = clock();
 		this->UI_WhoisOnlineScrollbar->Update(this->m_MapUI->MouseX, this->m_MapUI->MouseY, this->m_game->MouseWheelVal, this->m_MapUI->MousePressed, this->m_MapUI->MouseHeld, this->m_game->FPS);
-		if (WhoisOnlineEndTimer - WhosisOnlineStartTimer > 1000)
+		if (needsImmediatePopulate || WhoisOnlineEndTimer - WhosisOnlineStartTimer > 1000)
 		{
 			WhosisOnlineStartTimer = clock();
+			needsImmediatePopulate = false;
 			TextTools::ChatGroups[TextTools::ChatIndex::WhoIsOnline]->clear();
 			for (int i = 0; i < World::OnlinePlayers.size(); i++)
 			{

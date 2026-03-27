@@ -12,6 +12,7 @@ public:
 	UI_Scrollbar* UI_WhoisOnlineScrollbar;
 	//Map_UI_Inventory();
 	Map_UI_WhoIsOnline(Map_UI* m_MapUI, Game* m_Game);
+	bool needsImmediatePopulate = true;
 	void Update();
 	void Render(float depth);
 	~Map_UI_WhoIsOnline();

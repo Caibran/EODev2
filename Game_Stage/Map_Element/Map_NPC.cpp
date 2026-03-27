@@ -60,10 +60,13 @@ int  Map_NPC::FindWalkDirection(int dest_x, int dest_y)
 }
 void Map_NPC::MoveNPC(int FPS, int DestX, int DestY)
 {
+	const auto WALK_STEP_MS = std::chrono::milliseconds(90); // matches EndlessClient: 9 ticks * 10ms
+
 	int move_direction = this->FindWalkDirection(DestX, DestY);
 	this->direction = move_direction;
-	moveFPS++;
-	if (moveFPS > FPS / 8)
+
+	auto now = std::chrono::steady_clock::now();
+	if (now - walkStepTime >= WALK_STEP_MS)
 	{
 		switch (move_direction)
 		{
@@ -92,7 +95,7 @@ void Map_NPC::MoveNPC(int FPS, int DestX, int DestY)
 			break;
 		}
 		}
-		moveFPS = 0;
+		walkStepTime = now;
 		WalkCounter++;
 	}
 	if (WalkCounter >= 4)
@@ -245,7 +248,7 @@ void Map_NPC::Render(sf::Sprite* _Sprite, int x, int y, float depth, sf::Color m
 	sf::Vector2f * ScaleCntre = new sf::Vector2f(x + 32, 1);
 	//D3DXMatrixTransformation2D(&mat, ScaleCntre, 0, Scale, NULL, 0.0f, position);
 	int offsety = max(0, (std::min(41, width - 23)) / 4);
-	sf::Vector3f * Pos = new sf::Vector3f(x + 32 - (width / 2) + this->xoffset, offsety + y +  this->yoffset + 22 - height, depth);
+	sf::Vector3f * Pos = new sf::Vector3f(x + 32 - (width / 2), offsety + y + 22 - height, depth);
 	sf::Vector3f * Center = new sf::Vector3f(0, 0, 0);
 	m_color = sf::Color::Color(255 - (int)(255 * ((float)this->Deathcounter / ((float)m_Game->FPS / 2.5))), 255, 255, 255);
 
@@ -275,7 +278,7 @@ void Map_NPC::Render(sf::Sprite* _Sprite, int x, int y, float depth, sf::Color m
 			scalex = -1;
 		}
 		//Pos = new sf::Vector3f(x + 32 - (width / 2) + this->xoffset, offsety + y + this->yoffset + 22 - height, depth);
-		sf::Vector3f* IconPos = new sf::Vector3f(x + 32 - 35/2 +this->xoffset * scalex, y + this->yoffset +22 - height, 0);
+		sf::Vector3f* IconPos = new sf::Vector3f(x + 32 - 35/2, y + 22 - height, 0);
 		sf::Vector3f* IconCentre = new sf::Vector3f(0, 0, 0);
 	//	m_n_Game->map->Sprite->Draw(m_n_Game->Map_UserInterface->HudStatsTexture.get(), &IconSrcRect, IconCentre, IconPos, sf::Color::Color(255, 255, 255, 255));
 		this->m_Game->Draw(this->m_Game->ResourceManager->GetResource(2, 58, true), IconPos->x, IconPos->y, sf::Color(255, 255, 255, 255), IconSrcRect.left, IconSrcRect.top, IconSrcRect.right, IconSrcRect.bottom, sf::Vector2f(1, 1), 0.02f);

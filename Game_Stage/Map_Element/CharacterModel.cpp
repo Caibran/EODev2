@@ -365,11 +365,11 @@ void CharacterModel::Render(int x, int y, float depth, sf::Color m_Color)
 	}
 	if (FlipTexture)
 	{
-		this->m_game->Draw(&this->PaperdollSpriteTargets, &this->PaperdollTextureTargets, x - 43 - AddX + this->xoffset - (PPdollDrawWidth / 2), y - 30 + AddY + this->yoffset, m_Color, 0, 0, -1, -1, sf::Vector2f(-1, 1), depth);
+		this->m_game->Draw(&this->PaperdollSpriteTargets, &this->PaperdollTextureTargets, x - 43 - AddX - (PPdollDrawWidth / 2), y - 30 + AddY, m_Color, 0, 0, -1, -1, sf::Vector2f(-1, 1), depth);
 	}
 	else
 	{
-		this->m_game->Draw(&this->PaperdollSpriteTargets,&this->PaperdollTextureTargets, x - 43 - AddX + this->xoffset, y + AddY - 30 + this->yoffset, m_Color, 0, 0, -1, -1, sf::Vector2f(1, 1), depth);
+		this->m_game->Draw(&this->PaperdollSpriteTargets,&this->PaperdollTextureTargets, x - 43 - AddX, y + AddY - 30, m_Color, 0, 0, -1, -1, sf::Vector2f(1, 1), depth);
 	}
 
 }

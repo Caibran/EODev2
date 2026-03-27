@@ -15,7 +15,7 @@ void Map_UI_Map::Update()
 	this->UI_Element_MapButton->Update(this->m_MapUI->MouseX, this->m_MapUI->MouseY, this->m_MapUI->MousePressed);
 	if (this->UI_Element_MapButton->MouseClickedOnElement())
 	{
-		//this->m_MapUI->SetStage(Map_UI::UI_ElementStage::UI_Element_Map, 0);
+		this->m_MapUI->SetStage(Map_UI::UI_ElementStage::UI_Element_Map, 0);
 	}
 	switch (this->m_MapUI->UI_Stage)
 	{
